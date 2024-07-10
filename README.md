@@ -46,10 +46,48 @@ Alternativamente, siga o tutorial abaixo para levantar a rede manualmente
 ## 1. Criar Cluster Kubernetes
 
 Para iniciar o deploy da rede Fabric, é necessário criar um cluster Kubernetes. Neste exemplo, utilizaremos o KinD.
+As portas 80 e 443 são comumente usadas para serviços web. A porta 80 é utilizada para HTTP (Hypertext Transfer Protocol) e a porta 443 para HTTPS (HTTP Secure). Garantir que essas portas estejam disponíveis é crucial para o funcionamento correto de muitos serviços e aplicações que dependem de comunicação web, incluindo a instalação e operação de um cluster Kubernetes com KinD (Kubernetes in Docker).
 
-Certifique-se de que as seguintes portas estejam disponíveis antes de começar:
-- 80
-- 443
+1. **Verificar se as portas estão em uso:**
+
+   Abra o terminal e execute o comando abaixo:
+
+   ```bash
+   sudo lsof -i -P -n | grep LISTEN
+   ```
+
+   Isso listará todas as portas em uso. Verifique se as portas  80 e 443 estão listadas. Se não estiverem, elas estão disponíveis.
+
+2. **Verificar com `netstat`:**
+
+   Outro comando que pode ser utilizado é o `netstat`:
+
+   ```bash
+   sudo netstat -tuln | grep -E "(:80|:443)"
+   ```
+
+Se não houver saída, significa que as portas 80 e 443 estão disponíveis.
+   
+Se descobrir que as portas 80 ou 443 estão em uso, você pode encerrar o processo que as está utilizando. Use o comando apropriado para o seu sistema operacional para identificar e encerrar o processo.
+
+No Linux/MacOS
+Identifique o PID (Process ID) do processo usando a porta:
+
+```bash
+sudo lsof -i :80
+sudo lsof -i :443
+```
+Depois encerre o processo:
+
+```bash
+sudo kill -9 <PID>
+```
+
+
+
+
+Certificando-se de que essas portas estão disponíveis, você pode prosseguir com a criação do cluster Kubernetes usando o KinD.
+
 
 ### Usando KinD
 
