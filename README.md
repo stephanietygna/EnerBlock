@@ -1,1 +1,2 @@
-# EnerBlock
+## Sobre o projeto:
+Este repositório apresenta uma plataforma de monetização que utiliza tecnologia blockchain para desenvolver um ecossistema seguro e transparente, destinado à coleta, armazenamento e comercialização de dados de telemetria veicular. A monetização é definida a partir de regras implementadas por contratos inteligentes, que avaliam não apenas o esforço do condutor em compartilhar dados, mas também como o veículo é utilizado e seu consumo de combustível. A solução está sendo implementada com o uso de ferramentas seguras como o Hyperledger Fabric e Kubernetes, promovendo transparência, integridade e incentivando práticas de condução sustentáveis, viabilizando assim a monetização confiável de dados veiculares com foco em eficiência energética.
