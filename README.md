@@ -24,7 +24,7 @@ chmod 777 install.sh
 ```
 ## Script para levantar a rede automáticamente
 
-Para levantar a rede (ambiente de teste) automáticamente pelo terminal, basta usar o script ./network.sh pelo terminal
+Para iniciar a rede (ambiente de teste) automaticamente pelo terminal, utilize o script ./network.sh:
 
 ```bash
   ./network.sh up
@@ -45,9 +45,9 @@ Alternativamente, siga o tutorial abaixo para levantar a rede manualmente
 
 ## 1. Criar Cluster Kubernetes
 
-Para começar o deploy da rede Fabric é necessário criar um cluster Kubernetes. Será utilizado aqui o KinD.
+Para iniciar o deploy da rede Fabric, é necessário criar um cluster Kubernetes. Neste exemplo, utilizaremos o KinD.
 
-Certifique-se de ter as seguintes portas disponíveis antes de começar:
+Certifique-se de que as seguintes portas estejam disponíveis antes de começar:
 - 80
 - 443
 
