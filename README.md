@@ -1,7 +1,8 @@
 ## Sobre o projeto:
+
 Este repositório apresenta uma plataforma de monetização que utiliza tecnologia blockchain para desenvolver um ecossistema seguro e transparente, destinado à coleta, armazenamento e comercialização de dados de telemetria veicular. A monetização é definida a partir de regras implementadas por contratos inteligentes, que avaliam não apenas o esforço do condutor em compartilhar dados, mas também como o veículo é utilizado e seu consumo de combustível. A solução está sendo implementada com o uso de ferramentas seguras como o Hyperledger Fabric e Kubernetes, promovendo transparência, integridade e incentivando práticas de condução sustentáveis, viabilizando assim a monetização confiável de dados veiculares com foco em eficiência energética.
 
-[Telemetria Veicular](https://github.com/stephanietygna/EnerBlock/blob/main/telemetria-c%20(2).pdf)
+[Telemetria Veicular](<https://github.com/stephanietygna/EnerBlock/blob/main/telemetria-c%20(2).pdf>)
 
 # Tutorial
 
@@ -11,7 +12,7 @@ Caso a plataforma não esteja instalada na máquina, existem alguns requisitos m
 - [Kubectl](https://kubernetes.io/pt-br/docs/tasks/tools/install-kubectl-linux/)
 - [Krew](https://krew.sigs.k8s.io/)
 - [KinD](https://kind.sigs.k8s.io/) ou [K3d](https://k3d.io/v5.6.0/)
-- [Istio](https://istio.io/latest/ ) 
+- [Istio](https://istio.io/latest/)
 - [Helm](https://helm.sh/)
 - [JQ](https://jqlang.github.io/jq/download/)
 - [Docker](https://docs.docker.com/get-docker/)
@@ -22,6 +23,7 @@ Para instalar todos os requisitos automaticamente, use o seguinte script
 chmod 777 install.sh
 ./install.sh
 ```
+
 ## Script para levantar a rede automáticamente
 
 Para iniciar a rede (ambiente de teste) automaticamente pelo terminal, utilize o script ./network.sh:
@@ -56,7 +58,7 @@ As portas 80 e 443 são comumente usadas para serviços web. A porta 80 é utili
    sudo lsof -i -P -n | grep LISTEN
    ```
 
-   Isso listará todas as portas em uso. Verifique se as portas  80 e 443 estão listadas. Se não estiverem, elas estão disponíveis.
+   Isso listará todas as portas em uso. Verifique se as portas 80 e 443 estão listadas. Se não estiverem, elas estão disponíveis.
 
 2. **Verificar com `netstat`:**
 
@@ -67,7 +69,7 @@ As portas 80 e 443 são comumente usadas para serviços web. A porta 80 é utili
    ```
 
 Se não houver saída, significa que as portas 80 e 443 estão disponíveis.
-   
+
 Se descobrir que as portas 80 ou 443 estão em uso, você pode encerrar o processo que as está utilizando. Use o comando apropriado para o seu sistema operacional para identificar e encerrar o processo.
 
 No Linux/MacOS
@@ -77,17 +79,14 @@ Identifique o PID (Process ID) do processo usando a porta:
 sudo lsof -i :80
 sudo lsof -i :443
 ```
+
 Depois encerre o processo:
 
 ```bash
 sudo kill -9 <PID>
 ```
 
-
-
-
 Certificando-se de que essas portas estão disponíveis, você pode prosseguir com a criação do cluster Kubernetes usando o KinD.
-
 
 ### Usando KinD
 
@@ -110,7 +109,6 @@ kind create cluster --config=./resources/kind-config.yaml
 export STORAGE_CLASS=standard
 export DATABASE=couchdb
 ```
-
 
 ## 2. Instalação do Istio
 
@@ -237,7 +235,6 @@ Nesta etapa instalaremos o operador Kubernetes para o Fabric. Isso irá instalar
 helm install hlf-operator resources/hlf-operator-1.9.2.tgz
 ```
 
-
 ### Instalar o plugin Kubectl
 
 Em caso de erro, verifique se o [Krew](https://krew.sigs.k8s.io/docs/user-guide/setup/install/) está instalado.
@@ -344,6 +341,7 @@ kubectl hlf ca register --name=ord-ca --user=orderer --secret=ordererpw \
     --type=orderer --enroll-id enroll --enroll-secret=enrollpw --mspid=OrdererMSP --ca-url="https://ord-ca.localho.st:443"
 
 ```
+
 ### Deploy de três orderers
 
 ```bash
@@ -354,7 +352,6 @@ kubectl hlf ca register --name=ord-ca --user=orderer --secret=ordererpw \
 
 kubectl wait --timeout=180s --for=condition=Running fabricorderernodes.hlf.kungfusoftware.es --all
 ```
-
 
 Verifique se os orderers funcionam:
 
@@ -385,7 +382,6 @@ Para criar o canal nós precisamos criar o "wallet secret", que irá conter as i
       --ca-name ord-ca --ca-namespace default \
       --ca tlsca --mspid OrdererMSP --enroll-id admin --enroll-secret adminpw l # tls identity
 ```
-
 
 ## Registrar e matricular identidade INMETROMSP
 
@@ -538,10 +534,9 @@ ${ORDERER0_TLS_CERT}
 EOF
 ```
 
-## Instalação do chaincode 
+## Instalação do chaincode
 
 Caso queira testar o Chaincode As a Service, veja o tutorial em [ccas](ccas). Caso contrário, prossiga com a instalação do chaincode local a seguir.
-
 
 ## Instalação de chaincode Local
 
@@ -556,7 +551,7 @@ Para preparar a string de conexão, precisamos:
 
 (Repetir 2, 3 e 4 para Org2)
 
---------------
+---
 
 1. Obter a string de conexão sem usuários para a organização Org1MSP e OrdererMSP
 
@@ -567,23 +562,27 @@ kubectl hlf inspect -c=demo --output resources/network.yaml -o INMETROMSP -o PUC
 ### Registrar usuário para INMETRO
 
 2. Registre um usuário no CA para assinatura (registro)
+
 ```bash
 kubectl hlf ca register --name=inmetro-ca --user=admin --secret=adminpw --type=admin \
- --enroll-id enroll --enroll-secret=enrollpw --mspid INMETROMSP  
+ --enroll-id enroll --enroll-secret=enrollpw --mspid INMETROMSP
 ```
 
 3. Obter os certificados usando o usuário criado no passo 2 (enroll)
+
 ```bash
 kubectl hlf ca enroll --name=inmetro-ca --user=admin --secret=adminpw --mspid INMETROMSP \
         --ca-name ca  --output resources/peer-inmetro.yaml
 ```
 
 4. Anexar o usuário à string de conexão
+
 ```bash
 kubectl hlf utils adduser --userPath=resources/peer-inmetro.yaml --config=resources/network.yaml --username=admin --mspid=INMETROMSP
 ```
 
 ### Instalação do chaincode
+
 Com o arquivo de conexão preparado, vamos instalar o chaincode no peer que possua o atributo k8s-builder, como explicado no passo de deploy de peers
 
 ```bash
@@ -636,21 +635,12 @@ kubectl hlf chaincode commit --config=resources/network.yaml --mspid=INMETROMSP 
 kubectl hlf chaincode invoke --config=resources/network.yaml \
     --user=admin --peer=puc-peer0.default \
     --chaincode=VehicleContract --channel=demo \
-    --fcn=ReadStationData -a '[]'
-```
-
-### Fazer query de todos os assets
-
-```bash
-kubectl hlf chaincode query --config=resources/network.yaml \
-    --user=admin --peer=inmetro-peer0.default \
-    --chaincode=VehicleContract --channel=demo \
-    --fcn=QueryAllCars -a '[]'
+    --fcn=Createuser -a '["teste"]' '["teste"]' '["teste"]' '["teste"]'
 ```
 
 ## Fazendo upgrade de chaincode
 
-Para atualizar o chaincode, repita o mesmo proceso de instalação, alterando os valores dos parâmetros ```--version``` e ```---sequence```.
+Para atualizar o chaincode, repita o mesmo proceso de instalação, alterando os valores dos parâmetros `--version` e `---sequence`.
 Alternativamente, utilize variáveis de ambiente, como no exemplo a seguir:
 
 ```bash
@@ -663,20 +653,20 @@ kubectl hlf chaincode install --path=./chaincode/$CHAINCODE_LABEL \
 export PACKAGE_ID=$(kubectl hlf chaincode calculatepackageid --path=chaincode/$CHAINCODE_LABEL --language=golang --label=$CHAINCODE_LABEL)
 echo "PACKAGE_ID=$PACKAGE_ID"
 
-kubectl hlf chaincode approveformyorg --config=resources/network.yaml --user=admin --peer=inmetro-peer0.default \ 
-  --package-id=$PACKAGE_ID \ 
-  --version $CC_VERSION --sequence $CC_SEQUENCE --name=$CHAINCODE_LABEL \ 
+kubectl hlf chaincode approveformyorg --config=resources/network.yaml --user=admin --peer=inmetro-peer0.default \
+  --package-id=$PACKAGE_ID \
+  --version $CC_VERSION --sequence $CC_SEQUENCE --name=$CHAINCODE_LABEL \
   --policy="AND('INMETROMSP.member')" --channel=demo
 
-kubectl hlf chaincode commit --config=resources/network.yaml --mspid=INMETROMSP --user=admin \ 
-    --version $CC_VERSION --sequence $CC_SEQUENCE --name=$CHAINCODE_LABEL \ 
+kubectl hlf chaincode commit --config=resources/network.yaml --mspid=INMETROMSP --user=admin \
+    --version $CC_VERSION --sequence $CC_SEQUENCE --name=$CHAINCODE_LABEL \
     --policy="AND('INMETROMSP.member')" --channel=demo
 
 ```
 
 ## Usando clientes:
-[Usando Clientes](client)
 
+[Usando Clientes](cliente)
 
 # Operator UI
 
@@ -691,6 +681,7 @@ O HLF Operator UI fornece uma interface gráfica para uma experiência de usuár
 Ele consiste de dois componentes
 
 #### Operator API
+
 Fornece acesso aos dados para serem exibidos pelo Operator UI
 
 - Canais
@@ -699,6 +690,7 @@ Fornece acesso aos dados para serem exibidos pelo Operator UI
 - Certificate Authorities
 
 #### Operator UI
+
 Interface gráfica que permite:
 
 - Criar peers
@@ -709,6 +701,7 @@ Interface gráfica que permite:
 ## Levantando o Operator UI
 
 Primeiro deve-se levantar o Operator API
+
 ```bash
 export API_URL=api-operator.localho.st # URL de acesso
 
@@ -739,8 +732,8 @@ No navegador, insira a URL:
 operator-ui.localho.st
 
 ## Finalizando
-A essa altura, você deve ter:
 
+A essa altura, você deve ter:
 
 - Um serviço de ordenação com 3 orderers e CA
 - Organização INMETRO com 1 peer e CA
