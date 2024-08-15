@@ -265,6 +265,10 @@ export ORDERER_VERSION=2.5.5
 export CA_IMAGE=hyperledger/fabric-ca
 export CA_VERSION=1.5.7
 ```
+<h2>Execução do Hyperledger Fabric</h2>
+
+Você pode usar Fabric CAs para gerar material criptográfico, onde as CAs assinam os certificados e chaves gerados para criar uma raiz de confiança válida para cada organização. O script usa Docker Compose para iniciar três CAs: uma para cada organização de mesmo nível e uma para a organização do orderer. As configurações dos servidores Fabric CA estão no diretório "organizations/fabric-ca". No mesmo diretório, o script "registerEnroll.sh" utiliza o cliente Fabric CA para criar as identidades, certificados e pastas MSP necessárias para configurar a rede de teste em "organizations/ordererOrganizations".
+
 ### Criação do CA para INMETRO
 
 ```bash
@@ -326,11 +330,11 @@ openssl s_client -connect peer0-inmetro.localho.st:443
 
 ```
 
-### Criação do CA para a organização PUC
+### Criação do CA para a organização EnerBlock
 
 ```bash
-kubectl hlf ca create  --image=$CA_IMAGE --version=$CA_VERSION --storage-class=$STORAGE_CLASS --capacity=1Gi --name=puc-ca \
-    --enroll-id=enroll --enroll-pw=enrollpw --hosts=puc-ca.localho.st --istio-port=443
+kubectl hlf ca create  --image=$CA_IMAGE --version=$CA_VERSION --storage-class=$STORAGE_CLASS --capacity=1Gi --name=enerblock-ca \
+    --enroll-id=enroll --enroll-pw=enrollpw --hosts=enerblock-ca.localho.st --istio-port=443
 
 kubectl wait --timeout=180s --for=condition=Running fabriccas.hlf.kungfusoftware.es --all
 ```
@@ -338,26 +342,26 @@ kubectl wait --timeout=180s --for=condition=Running fabriccas.hlf.kungfusoftware
 Verifique se o CA está funcionando
 
 ```bash
-curl -k https://puc-ca.localho.st:443/cainfo
+curl -k https://enerblock-ca.localho.st:443/cainfo
 ```
 
-Registre um usuário no CA da organização PUC para os peers
+Registre um usuário no CA da organização Enerblock para os peers
 
 ```bash
 # register user in CA for peers
-kubectl hlf ca register --name=puc-ca --user=peer --secret=peerpw --type=peer \
- --enroll-id enroll --enroll-secret=enrollpw --mspid PUCMSP
+kubectl hlf ca register --name=enerblock-ca --user=peer --secret=peerpw --type=peer \
+ --enroll-id enroll --enroll-secret=enrollpw --mspid enerblockMSP
 ```
 
-### Deploy de peers para a organização PUC (escolha um apenas)
+### Deploy de peers para a organização EnerBlock (escolha um apenas)
 
 Lembre-se de escolher a mesma versão que foi escolhida para o peer INMETRO.
 
 (RECOMENDADO)
 ```bash
-kubectl hlf peer create --statedb=$DATABASE --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=$STORAGE_CLASS --enroll-id=peer --mspid=PUCMSP \
-        --enroll-pw=peerpw --capacity=5Gi --name=puc-peer0 --ca-name=puc-ca.default \
-        --hosts=puc-org2.localho.st --istio-port=443
+kubectl hlf peer create --statedb=$DATABASE --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=$STORAGE_CLASS --enroll-id=peer --mspid=enerblockMSP \
+        --enroll-pw=peerpw --capacity=5Gi --name=enerblock-peer0 --ca-name=enerblock-ca.default \
+        --hosts=enerblock-org2.localho.st --istio-port=443
 
 kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
 ```
@@ -367,11 +371,11 @@ kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftwa
 
 export PEER_IMAGE=quay.io/kfsoftware/fabric-peer
 export PEER_VERSION=2.4.1-v0.0.3
-export MSP_ORG=PUCMSP
+export MSP_ORG=enerblockMSP
 export PEER_SECRET=peerpw
 
 kubectl hlf peer create --statedb=$DATABASE --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=$STORAGE_CLASS --enroll-id=peer --mspid=$MSP_ORG \
---enroll-pw=$PEER_SECRET --capacity=5Gi --name=puc-peer0 --ca-name=puc-ca.default --k8s-builder=true --hosts=peer0-puc.localho.st --istio-port=443
+--enroll-pw=$PEER_SECRET --capacity=5Gi --name=enerblock-peer0 --ca-name=enerblock-ca.default --k8s-builder=true --hosts=peer0-enerblock.localho.st --istio-port=443
 
 kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
 
@@ -382,7 +386,7 @@ kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftwa
 Verifique se o peer funciona
 
 ```
-openssl s_client -connect peer0-puc.localho.st:443
+openssl s_client -connect peer0-enerblock.localho.st:443
 ```
 
 ### Deploy de uma organização `Orderer`
