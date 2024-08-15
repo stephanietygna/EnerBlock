@@ -587,11 +587,11 @@ kubectl hlf utils adduser --userPath=resources/peer-inmetro.yaml --config=resour
 Com o arquivo de conexão preparado, vamos instalar o chaincode no peer que possua o atributo k8s-builder, como explicado no passo de deploy de peers
 
 ```bash
-kubectl hlf chaincode install --path=./chaincodes/fieldclimate \
-    --config=resources/network.yaml --language=golang --label=fieldclimate --user=admin --peer=inmetro-peer0.default
+kubectl hlf chaincode install --path=./chaincodes/VehicleContract \
+    --config=resources/network.yaml --language=golang --label=VehicleContract --user=admin --peer=inmetro-peer0.default
 
-kubectl hlf chaincode install --path=./chaincodes/fieldclimate \
-    --config=resources/network.yaml --language=golang --label=fieldclimate --user=admin --peer=puc-peer0.default
+kubectl hlf chaincode install --path=./chaincodes/VehicleContract \
+    --config=resources/network.yaml --language=golang --label=VehicleContract --user=admin --peer=puc-peer0.default
 
 # this can take 3-4 minutes
 ```
@@ -613,14 +613,14 @@ Aprovar chaincode
 #Organização INMETRO
 kubectl hlf chaincode approveformyorg --config=resources/network.yaml --user=admin --peer=inmetro-peer0.default \
     --package-id=$PACKAGE_ID \
-    --version "1.0" --sequence 1 --name=fieldclimate \
+    --version "1.0" --sequence 1 --name=VehicleContract \
     --policy="AND('INMETROMSP.member', 'PUCMSP.member')" --channel=demo
 
 # Organização PUC
 
 kubectl hlf chaincode approveformyorg --config=resources/network.yaml --user=admin --peer=puc-peer0.default \
     --package-id=$PACKAGE_ID \
-    --version "1.0" --sequence 1 --name=fieldclimate \
+    --version "1.0" --sequence 1 --name=VehicleContract \
     --policy="AND('INMETROMSP.member', 'PUCMSP.member')" --channel=demo
 
 # Fazer o commit do chaincode
@@ -635,7 +635,7 @@ kubectl hlf chaincode commit --config=resources/network.yaml --mspid=INMETROMSP 
 ```bash
 kubectl hlf chaincode invoke --config=resources/network.yaml \
     --user=admin --peer=puc-peer0.default \
-    --chaincode=fieldclimate --channel=demo \
+    --chaincode=VehicleContract --channel=demo \
     --fcn=ReadStationData -a '[]'
 ```
 
@@ -644,7 +644,7 @@ kubectl hlf chaincode invoke --config=resources/network.yaml \
 ```bash
 kubectl hlf chaincode query --config=resources/network.yaml \
     --user=admin --peer=inmetro-peer0.default \
-    --chaincode=fieldclimate --channel=demo \
+    --chaincode=VehicleContract --channel=demo \
     --fcn=QueryAllCars -a '[]'
 ```
 
