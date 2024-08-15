@@ -1,15 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
-	"strings"
+
 	"time"
 
-	"fieldclimate/modules"
+	"vehiclecontract/modules"
 
 	mspclient "github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
