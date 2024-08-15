@@ -232,18 +232,15 @@ Nesta etapa instalaremos o operador Kubernetes para o Fabric. Isso irá instalar
 - CRD (Custom Resource Definitions) to deploy Certification Fabric Peers, Orderers and Authorities
 - Deploy the program to deploy the nodes in Kubernetes
 
-Instale o helm: [https://helm.sh/docs/intro/install/](https://helm.sh/docs/intro/install/)
-
 ```bash
-helm repo add kfs https://kfsoftware.github.io/hlf-helm-charts --force-update
-helm upgrade --install hlf-operator --version=1.10.0 -- kfs/hlf-operator
+# instalar localmente (quando a rede bloqueia, mas é uma versão antiga)
+helm install hlf-operator resources/hlf-operator-1.9.2.tgz
 ```
 
 
 ### Instalar o plugin Kubectl
 
-Antes de instalar o plugin Kubectl, instale antes o Krew:
-[https://krew.sigs.k8s.io/docs/user-guide/setup/install/](https://krew.sigs.k8s.io/docs/user-guide/setup/install/)
+Em caso de erro, verifique se o [Krew](https://krew.sigs.k8s.io/docs/user-guide/setup/install/) está instalado.
 
 A seguir, instale o Kubectl com o seguinte comando:
 
@@ -256,15 +253,13 @@ kubectl krew install hlf
 ### Environment Variables for AMD (Default)
 
 ```bash
-export PEER_IMAGE=hyperledger/fabric-peer
-export PEER_VERSION=2.5.5
-
 export ORDERER_IMAGE=hyperledger/fabric-orderer
 export ORDERER_VERSION=2.5.5
 
 export CA_IMAGE=hyperledger/fabric-ca
 export CA_VERSION=1.5.7
 ```
+
 <h2>Execução do Hyperledger Fabric</h2>
 
 Você pode usar Fabric CAs para gerar material criptográfico, onde as CAs assinam os certificados e chaves gerados para criar uma raiz de confiança válida para cada organização. O script usa Docker Compose para iniciar três CAs: uma para cada organização de mesmo nível e uma para a organização do orderer. As configurações dos servidores Fabric CA estão no diretório "organizations/fabric-ca". No mesmo diretório, o script "registerEnroll.sh" utiliza o cliente Fabric CA para criar as identidades, certificados e pastas MSP necessárias para configurar a rede de teste em "organizations/ordererOrganizations".
@@ -295,20 +290,9 @@ kubectl hlf ca register --name=inmetro-ca --user=peer --secret=peerpw --type=pee
 
 ### Deploy de peers para a organização INMETRO (escolha um apenas)
 
-(RECOMENDADO) Versão atualizada do peer, mas capaz apenas de instalar chaincodes externos
+OBS: O peer a seguir não suporta [CCAS](ccas)
+
 ```bash
-kubectl hlf peer create --statedb=$DATABASE --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=$STORAGE_CLASS --enroll-id=peer --mspid=INMETROMSP \
-        --enroll-pw=peerpw --capacity=5Gi --name=inmetro-peer0 --ca-name=inmetro-ca.default \
-        --hosts=peer0-inmetro.localho.st --istio-port=443
-
-kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
-```
-
-(ALTERNATIVA) O peer acima não é capaz de instalar chaincode local, apenas chaincodes CCAS / externos. 
-Para criar peers que instalam chaincode local, será neceessário criar um peer com o atributo kubernetes chaincode builder (k8s builder) com o comando abaixo.
-Lembre de escolher apenas uma das versões apenas
-```bash
-
 export PEER_IMAGE=quay.io/kfsoftware/fabric-peer
 export PEER_VERSION=2.4.1-v0.0.3
 export MSP_ORG=INMETROMSP
@@ -328,65 +312,6 @@ Verifique se os peers foram implementados e funcionam:
 ```bash
 openssl s_client -connect peer0-inmetro.localho.st:443
 
-```
-
-### Criação do CA para a organização EnerBlock
-
-```bash
-kubectl hlf ca create  --image=$CA_IMAGE --version=$CA_VERSION --storage-class=$STORAGE_CLASS --capacity=1Gi --name=enerblock-ca \
-    --enroll-id=enroll --enroll-pw=enrollpw --hosts=enerblock-ca.localho.st --istio-port=443
-
-kubectl wait --timeout=180s --for=condition=Running fabriccas.hlf.kungfusoftware.es --all
-```
-
-Verifique se o CA está funcionando
-
-```bash
-curl -k https://enerblock-ca.localho.st:443/cainfo
-```
-
-Registre um usuário no CA da organização Enerblock para os peers
-
-```bash
-# register user in CA for peers
-kubectl hlf ca register --name=enerblock-ca --user=peer --secret=peerpw --type=peer \
- --enroll-id enroll --enroll-secret=enrollpw --mspid enerblockMSP
-```
-
-### Deploy de peers para a organização EnerBlock (escolha um apenas)
-
-Lembre-se de escolher a mesma versão que foi escolhida para o peer INMETRO.
-
-(RECOMENDADO)
-```bash
-kubectl hlf peer create --statedb=$DATABASE --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=$STORAGE_CLASS --enroll-id=peer --mspid=enerblockMSP \
-        --enroll-pw=peerpw --capacity=5Gi --name=enerblock-peer0 --ca-name=enerblock-ca.default \
-        --hosts=enerblock-org2.localho.st --istio-port=443
-
-kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
-```
-
-(ALTERNATIVA)
-```bash
-
-export PEER_IMAGE=quay.io/kfsoftware/fabric-peer
-export PEER_VERSION=2.4.1-v0.0.3
-export MSP_ORG=enerblockMSP
-export PEER_SECRET=peerpw
-
-kubectl hlf peer create --statedb=$DATABASE --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=$STORAGE_CLASS --enroll-id=peer --mspid=$MSP_ORG \
---enroll-pw=$PEER_SECRET --capacity=5Gi --name=enerblock-peer0 --ca-name=enerblock-ca.default --k8s-builder=true --hosts=peer0-enerblock.localho.st --istio-port=443
-
-kubectl wait --timeout=180s --for=condition=Running fabricpeers.hlf.kungfusoftware.es --all
-
-# leva alguns minutos
-
-```
-
-Verifique se o peer funciona
-
-```
-openssl s_client -connect peer0-enerblock.localho.st:443
 ```
 
 ### Deploy de uma organização `Orderer`
@@ -427,19 +352,9 @@ kubectl hlf ca register --name=ord-ca --user=orderer --secret=ordererpw \
       --enroll-pw=ordererpw --capacity=2Gi --name=ord-node0 --ca-name=ord-ca.default \
       --hosts=orderer0-ord.localho.st --istio-port=443 --admin-hosts=admin-orderer0-ord.localho.st
 
-  kubectl hlf ordnode create --image=$ORDERER_IMAGE --version=$ORDERER_VERSION \
-      --storage-class=$STORAGE_CLASS --enroll-id=orderer --mspid=OrdererMSP \
-      --enroll-pw=ordererpw --capacity=2Gi --name=ord-node1 --ca-name=ord-ca.default \
-      --hosts=orderer1-ord.localho.st --istio-port=443 --admin-hosts=admin-orderer1-ord.localho.st
-
-  kubectl hlf ordnode create --image=$ORDERER_IMAGE --version=$ORDERER_VERSION \
-      --storage-class=$STORAGE_CLASS --enroll-id=orderer --mspid=OrdererMSP \
-      --enroll-pw=ordererpw --capacity=2Gi --name=ord-node2 --ca-name=ord-ca.default \
-      --hosts=orderer2-ord.localho.st --istio-port=443 --admin-hosts=admin-orderer2-ord.localho.st
-
-
 kubectl wait --timeout=180s --for=condition=Running fabricorderernodes.hlf.kungfusoftware.es --all
 ```
+
 
 Verifique se os orderers funcionam:
 
@@ -449,10 +364,7 @@ kubectl get pods
 
 ```bash
 openssl s_client -connect orderer0-ord.localho.st:443
-openssl s_client -connect orderer1-ord.localho.st:443
-openssl s_client -connect orderer2-ord.localho.st:443
 ```
-
 
 ### Criar canal
 
@@ -486,20 +398,6 @@ Para criar o canal nós precisamos criar o "wallet secret", que irá conter as i
   kubectl hlf identity create --name inmetro-admin --namespace default \
       --ca-name inmetro-ca --ca-namespace default \
       --ca ca --mspid INMETROMSP --enroll-id admin --enroll-secret adminpw
-```
-
-## Registrar e matricular identidade PUCMSP
-
-```bash
-  ## register PUCMSP Identity
-  kubectl hlf ca register --name=puc-ca --namespace=default --user=admin --secret=adminpw \
-      --type=admin --enroll-id enroll --enroll-secret=enrollpw --mspid=PUCMSP
-
-  # enroll
-  kubectl hlf identity create --name puc-admin --namespace default \
-      --ca-name puc-ca --ca-namespace default \
-      --ca ca --mspid PUCMSP --enroll-id admin --enroll-secret adminpw
-
 ```
 
 ## Criando canal principal
@@ -638,48 +536,11 @@ ${ORDERER0_TLS_CERT}
     - name: inmetro-peer0
       namespace: default
 EOF
-
-
 ```
 
-## Inserir peers da PUC no canal
+## Instalação do chaincode 
 
-```bash
-
-export IDENT_8=$(printf "%8s" "")
-export ORDERER0_TLS_CERT=$(kubectl get fabricorderernodes ord-node0 -o=jsonpath='{.status.tlsCert}' | sed -e "s/^/${IDENT_8}/" )
-
-kubectl apply -f - <<EOF
-apiVersion: hlf.kungfusoftware.es/v1alpha1
-kind: FabricFollowerChannel
-metadata:
-  name: demo-pucmsp
-spec:
-  anchorPeers:
-    - host: puc-peer0.default
-      port: 7051
-  hlfIdentity:
-    secretKey: user.yaml
-    secretName: puc-admin
-    secretNamespace: default
-  mspId: PUCMSP
-  name: demo
-  externalPeersToJoin: []
-  orderers:
-    - certificate: |
-${ORDERER0_TLS_CERT}
-      url: grpcs://orderer0-ord.localho.st:443
-  peersToJoin:
-    - name: puc-peer0
-      namespace: default
-EOF
-
-
-```
-
-## Instalação de chaincode as a service (CCAS) (RECOMENDADO)
-
-Dirija-se até a pasta [chaincode-external](chaincode-external)
+Caso queira testar o Chaincode As a Service, veja o tutorial em [ccas](ccas). Caso contrário, prossiga com a instalação do chaincode local a seguir.
 
 
 ## Instalação de chaincode Local
@@ -722,18 +583,6 @@ kubectl hlf ca enroll --name=inmetro-ca --user=admin --secret=adminpw --mspid IN
 kubectl hlf utils adduser --userPath=resources/peer-inmetro.yaml --config=resources/network.yaml --username=admin --mspid=INMETROMSP
 ```
 
-### Registrar usuário para PUC (repetir passos acima, mas para a PUC)
-
-```bash
-kubectl hlf ca register --name=puc-ca --user=admin --secret=adminpw --type=admin \
- --enroll-id enroll --enroll-secret=enrollpw --mspid PUCMSP
-
-kubectl hlf ca enroll --name=puc-ca --user=admin --secret=adminpw --mspid PUCMSP \
-        --ca-name ca  --output resources/peer-puc.yaml
-
-kubectl hlf utils adduser --userPath=resources/peer-puc.yaml --config=resources/network.yaml --username=admin --mspid=PUCMSP
-```
-
 ### Instalação do chaincode
 Com o arquivo de conexão preparado, vamos instalar o chaincode no peer que possua o atributo k8s-builder, como explicado no passo de deploy de peers
 
@@ -773,17 +622,15 @@ kubectl hlf chaincode approveformyorg --config=resources/network.yaml --user=adm
     --package-id=$PACKAGE_ID \
     --version "1.0" --sequence 1 --name=fieldclimate \
     --policy="AND('INMETROMSP.member', 'PUCMSP.member')" --channel=demo
-```
 
-Fazer o commit do chaincode
+# Fazer o commit do chaincode
 
-```bash
 kubectl hlf chaincode commit --config=resources/network.yaml --mspid=INMETROMSP --user=admin \
-    --version "1.0" --sequence 1 --name=fieldclimate \
-    --policy="AND('INMETROMSP.member', 'PUCMSP.member')" --channel=demo
+    --version "1.0" --sequence 1 --name=$CHAINCODE_LABEL \
+    --policy="AND('INMETROMSP.member')" --channel=demo
 ```
 
-Testar chaincode
+### Testar chaincode
 
 ```bash
 kubectl hlf chaincode invoke --config=resources/network.yaml \
@@ -792,7 +639,7 @@ kubectl hlf chaincode invoke --config=resources/network.yaml \
     --fcn=ReadStationData -a '[]'
 ```
 
-Fazer query de todos os assets
+### Fazer query de todos os assets
 
 ```bash
 kubectl hlf chaincode query --config=resources/network.yaml \
@@ -803,19 +650,39 @@ kubectl hlf chaincode query --config=resources/network.yaml \
 
 ## Fazendo upgrade de chaincode
 
-1. Package
+Para atualizar o chaincode, repita o mesmo proceso de instalação, alterando os valores dos parâmetros ```--version``` e ```---sequence```.
+Alternativamente, utilize variáveis de ambiente, como no exemplo a seguir:
 
-2. Install the new package
+```bash
+export CC_VERSION="1.1"
+export CC_SEQUENCE=2
 
-3. Approve the cc with new version and sequence number
+kubectl hlf chaincode install --path=./chaincode/$CHAINCODE_LABEL \
+    --config=resources/network.yaml --language=golang --label=$CHAINCODE_LABEL --user=admin --peer=inmetro-peer0.default
 
-4. Commit CC with new version and sequence.
+export PACKAGE_ID=$(kubectl hlf chaincode calculatepackageid --path=chaincode/$CHAINCODE_LABEL --language=golang --label=$CHAINCODE_LABEL)
+echo "PACKAGE_ID=$PACKAGE_ID"
 
-5. Install the chaincode pod
+kubectl hlf chaincode approveformyorg --config=resources/network.yaml --user=admin --peer=inmetro-peer0.default \ 
+  --package-id=$PACKAGE_ID \ 
+  --version $CC_VERSION --sequence $CC_SEQUENCE --name=$CHAINCODE_LABEL \ 
+  --policy="AND('INMETROMSP.member')" --channel=demo
+
+kubectl hlf chaincode commit --config=resources/network.yaml --mspid=INMETROMSP --user=admin \ 
+    --version $CC_VERSION --sequence $CC_SEQUENCE --name=$CHAINCODE_LABEL \ 
+    --policy="AND('INMETROMSP.member')" --channel=demo
+
+```
 
 ## Usando clientes:
 [Usando Clientes](client)
 
+
+# Operator UI
+
+O HLF Operator UI fornece uma interface gráfica para uma experiência de usuário mais conveniente. O Operator UI torna mais fácil o processo de criar, clonar, supervisionar, editar e deletar os nós de Peers, Orderers e CAs.
+
+Ele consiste de dois componentes
 
 # Levantando Operator UI
 
